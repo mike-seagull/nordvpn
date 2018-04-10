@@ -78,6 +78,7 @@ ENVIRONMENT VARIABLES (only available with `docker run`)
 
  * `USER`     - User for NordVpn account.
  * `PASS`     - Password for NordVpn account.
+ * `REGION`   - *Optional* Provide a country to connect to.
  * `NETWORK`  - CIDR network (IE 192.168.1.0/24), add a route to allows replies once the VPN is up
  * `NETWORK6` - CIDR IPv6 network (IE fe00:d34d:b33f::/64), add a route to allows replies once the VPN is up
 

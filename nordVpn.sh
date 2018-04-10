@@ -38,10 +38,23 @@ base_dir="/vpn"
 ovpn_dir="$base_dir/ovpn"
 auth_file="$base_dir/auth"
 
+if [ ! -z "$REGION" ]; then
+	# Get List of countries with ids
+	countries=`curl -s https://nordvpn.com/wp-admin/admin-ajax.php?action=servers_countries |\
+		jq -c ' .[] | {id: .id, name: .name, code: .code}'`
+	# get country id from countries
+	country_id=`echo "$countries" | grep "$REGION" | jq -r '.id'`
+fi
 # Get NordVpn server recomendations
-recomendations=`curl -s https://nordvpn.com/wp-admin/admin-ajax.php?action=servers_recommendations |\
-                jq -r '.[] | .hostname' | shuf`
+if [ ! -z "$country_id" ];then
+	# default to recomendations with no country specification
+	recomendations=`curl -s https://nordvpn.com/wp-admin/admin-ajax.php?action=servers_recommendations |\
+        		jq -r '.[] | .hostname' | gshuf`
+else
+	recomendations=`curl -s https://nordvpn.com/wp-admin/admin-ajax.php?action=servers_recommendations\&filters\=%7B%22country_id%22%3A${country_id}%7D |\
+			jq -r '.[] | .hostname' | gshuf`
 
+fi
 for recomendation in ${recomendations}; do # Prefer UDP
     config_file="${ovpn_dir}/${recomendation}.udp.ovpn"
     if [ -r "$config_file" ]; then
@@ -49,6 +62,7 @@ for recomendation in ${recomendations}; do # Prefer UDP
         break
     fi
 done
+
 if [ -z $config ]; then # Use TCP if UDP not available
    for recomendation in ${recomendations}; do
         config_file="${ovpn_dir}/${recomendation}.tcp.ovpn"
